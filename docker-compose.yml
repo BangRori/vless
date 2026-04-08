@@ -7,8 +7,8 @@ services:
     labels:
       - "watchtower.enable=true"
     environment:
-      - SUBDOMAINS=ваш субдомен
-      - TOKEN=ваш токен
+      - SUBDOMAINS= #ваш субдомен
+      - TOKEN= #ваш токен
       - TZ=Europe/Minsk
     restart: unless-stopped
     mem_limit: 16M

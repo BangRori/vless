@@ -4,8 +4,8 @@ log_file: "/var/log/nginx/stream-access.log"
 reputation_db: "/var/lib/dpi-alert/reputation.json"
 
 client:
-  sni: "addons.mozilla.org"
-  backend: "vless:2053"
+  sni: "google.com" # Ваш камуфляж-домен
+  backend: "vless:1080" # Ваш VLESS-бэкенд
 
 thresholds:
   rate_window_sec: 60

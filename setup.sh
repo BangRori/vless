@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-git pull
+#telegram
+sudo install -m 0600 ./telegram /etc/default/telegram
 
 #keepalive
 sudo install -m 0644 ./99-keepalive.conf /etc/sysctl.d/99-keepalive.conf
