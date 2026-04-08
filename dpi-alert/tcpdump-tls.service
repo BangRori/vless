@@ -1,0 +1,23 @@
+[Unit]
+Description=tcpdump TLS handshake capture on port 443
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=root
+Group=root
+UMask=0077
+ExecStart=/usr/local/sbin/tcpdump-tls.sh 
+Restart=on-failure
+RestartSec=5s
+StandardOutput=null
+StandardError=journal
+NoNewPrivileges=false
+PrivateTmp=false
+ProtectSystem=false
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target

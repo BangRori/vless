@@ -1,0 +1,68 @@
+{
+  "log": {
+    "loglevel": "info",
+    "access": "/var/log/vpn/vless-access.log",
+    "error": "/var/log/vpn/vless-error.log"
+  },
+  "inbounds": [
+    {
+      "port": 1080,
+      "listen": "0.0.0.0",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "ваш uuid $cat /proc/sys/kernel/random/uuid",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "google.com:443",
+          "serverNames": ["google.com.org"],
+          "alpn": ["h2", "http/1.1"],
+          "privateKey": "ваш ключ $docker run --rm ghcr.io/xtls/xray-core x25519",
+          "shortIds": ["9d933959", "135b22c0", "170b78cb", "91bd2091"],
+          "fallbacks": [{ "dest": "fallback:443", "xver": 0 }],
+          "spiderX": "/"
+        },
+        "sockopt": {
+          "tcpKeepAliveIdle": 600,
+          "tcpKeepAliveInterval": 60,
+          "tcpNoDelay": true
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    },
+    {
+      "port": 8080,
+      "listen": "127.0.0.1",
+      "protocol": "http",
+      "settings": {
+        "allowTransparent": false
+      },
+      "tag": "health-in"
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "settings": {},
+      "streamSettings": {
+        "sockopt": {
+          "tcpKeepAliveIdle": 600,
+          "tcpKeepAliveInterval": 60,
+          "tcpNoDelay": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "log": { "loglevel": "warning" },
+
+  "dns": {
+    "servers": ["https://dns.google/dns-query", "https://1.1.1.1/dns-query"],
+    "queryStrategy": "UseIPv4",
+    "cacheSize": 512
+  },
+
+  "inbounds": [
+    {
+      "port": 1080,
+      "protocol": "socks",
+      "settings": { "auth": "noauth", "udp": true },
+      "sniffing": { "enabled": true, "destOverride": ["http", "tls", "quic"] }
+    }
+  ],
+
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "IP вашего VPS",
+            "port": 443,
+            "users": [
+              {
+                "id": "ваш uuid из серверного конфига",
+                "flow": "xtls-rprx-vision",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "serverName": "google.com",
+          "publicKey": "ваш ключ из серверного конфига",
+          "shortId": "9d933959",
+          "spiderX": "/"
+        },
+        "sockopt": {
+          "tcpKeepAliveIdle": 600,
+          "tcpKeepAliveInterval": 60,
+          "tcpNoDelay": true
+        }
+      },
+      "domainStrategy": "UseIPv4",
+      "mux": { "enabled": false }
+    },
+
+    {
+      "protocol": "freedom",
+      "tag": "direct",
+      "settings": { "domainStrategy": "UseIPv4" }
+    }
+  ],
+
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      { "type": "field", "ip": ["geoip:private"], "outboundTag": "direct" }
+    ]
+  }
+}

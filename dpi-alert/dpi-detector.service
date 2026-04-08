@@ -1,0 +1,10 @@
+[Unit]
+Description=DPI scan detector
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/sbin/dpi_detector.py --config /etc/dpi-alert/dpi_detector.yml
+User=root
+StandardOutput=journal
+StandardError=journal

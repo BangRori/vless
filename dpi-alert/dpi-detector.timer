@@ -1,0 +1,11 @@
+[Unit]
+Description=DPI scan detector timer
+Requires=dpi-detector.service
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target
