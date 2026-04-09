@@ -18,8 +18,9 @@ import json
 import os
 import glob
 import subprocess
+import copy
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -161,6 +162,8 @@ def save_reputation(path: str, rep: dict):
         print(f"[WARN] Не удалось сохранить репутацию: {e}", file=sys.stderr)
 
 def update_reputation(rep: dict, ip: str, score: int, reasons: list[str]) -> dict:
+    # FIX: deep copy чтобы не мутировать вложенные объекты исходного dict
+    rep = copy.deepcopy(rep)
     now = datetime.now().isoformat()
     if ip not in rep:
         rep[ip] = {
@@ -272,7 +275,12 @@ def format_telegram_message(
 def load_last_ts(path: str) -> datetime | None:
     try:
         with open(path) as f:
-            return datetime.fromisoformat(f.read().strip())
+            ts = datetime.fromisoformat(f.read().strip())
+            # FIX: если datetime naive (нет timezone offset) — считаем UTC,
+            # чтобы не было TypeError при сравнении с aware datetime из лога
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            return ts
     except (FileNotFoundError, ValueError):
         return None
 
@@ -334,6 +342,8 @@ def read_lines(path: str, last_ts: datetime | None) -> list[str]:
                     result.append(line)
                 else:
                     parsed = parse_line(line)
+                    # FIX: оба datetime теперь aware (last_ts нормализован в load_last_ts),
+                    # сравнение безопасно
                     if parsed and parsed['ts'] > last_ts:
                         result.append(line)
         return result
@@ -420,7 +430,8 @@ def analyze_nginx(
         if not is_belarus_ip(remote, networks):
             continue
 
-        # === Лог всех BY-коннектов ===
+        # FIX: логируем ЛЮБОЙ BY-коннект не от клиента, независимо от статуса/SNI/backend.
+        # Причины добавляем для контекста, но запись происходит всегда.
         if by_log_path:
             by_reasons = []
             if parsed['status'] != '200':
@@ -429,8 +440,8 @@ def analyze_nginx(
                 by_reasons.append("backend=fallback")
             if not (sni == client_sni and backend == client_backend):
                 by_reasons.append("not_client_traffic")
-            if by_reasons:
-                log_by_connection(by_log_path, parsed, " | ".join(by_reasons))
+            # Всегда пишем — "ok" если нет специфичных причин (чистый коннект с правильным SNI)
+            log_by_connection(by_log_path, parsed, " | ".join(by_reasons) if by_reasons else "ok")
 
         score            = 0
         reasons          = []
@@ -529,6 +540,7 @@ def get_pcap_files(pcap_dir: str, pattern: str, min_size: int) -> list[str]:
     if not files:
         return []
     files.sort(key=os.path.getmtime)
+    # Последний файл пропускается намеренно: tcpdump ещё может писать в него
     return files[:-1]
 
 def analyze_pcap(cfg: dict, networks: list, reputation: dict) -> tuple[list[dict], dict]:
@@ -712,9 +724,14 @@ def main():
 
     log_file       = cfg['log_file']
     state_file     = cfg.get('state_file', STATE_FILE)
-    client_sni     = cfg['client']['sni']
-    client_backend = cfg['client']['backend']
     rep_file       = cfg.get('reputation_db', REPUTATION_FILE)
+
+    # Поле allowed_asns присутствует в конфиге, но фильтрация по ASN не реализована.
+    # При необходимости — добавить whois/BGP-lookup и сравнение с cfg.get('allowed_asns', [])
+    allowed_asns = cfg.get('allowed_asns', [])
+    if allowed_asns:
+        print(f"[INFO] allowed_asns в конфиге ({len(allowed_asns)} записей) — "
+              f"фильтрация по ASN не реализована, поле игнорируется")
 
     tg_creds   = load_telegram_creds(TELEGRAM_ENV)
     reputation = load_reputation(rep_file)
@@ -732,6 +749,8 @@ def main():
         print("[INFO] Новых строк в nginx логе нет")
         nginx_results = []
     else:
+        client_sni     = cfg['client']['sni']
+        client_backend = cfg['client']['backend']
         client_ip = find_client_ip(lines, client_sni, client_backend)
         if client_ip:
             print(f"[INFO] Client IP: {client_ip}")
