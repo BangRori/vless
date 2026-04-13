@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .tab { cursor: pointer; padding: 10px; border: 1px solid #ccc; display: inline-block; margin-right: 5px; }
+        .tab-content { display: none; margin-top: 10px; border: 1px solid #ccc; padding: 10px; }
+        .active { font-weight: bold; }
+        textarea { width: 100%; height: 200px; margin-top: 10px; }
+        button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Configuration Panel</h1>
+    <div>
+        <div class="tab" onclick="showTab('config1')">Config 1</div>
+        <div class="tab" onclick="showTab('config2')">Config 2</div>
+        <div class="tab" onclick="showTab('config3')">Config 3</div>
+    </div>
+    <div id="config1" class="tab-content"> 
+        <textarea id="config1Text">// Edit Config 1</textarea>
+        <button onclick="saveConfig('config1Text')">Save</button>
+        <button onclick="refreshConfig('config1Text')">Refresh</button>
+        <button onclick="resetConfig('config1Text')">Reset</button>
+    </div>
+    <div id="config2" class="tab-content"> 
+        <textarea id="config2Text">// Edit Config 2</textarea>
+        <button onclick="saveConfig('config2Text')">Save</button>
+        <button onclick="refreshConfig('config2Text')">Refresh</button>
+        <button onclick="resetConfig('config2Text')">Reset</button>
+    </div>
+    <div id="config3" class="tab-content"> 
+        <textarea id="config3Text">// Edit Config 3</textarea>
+        <button onclick="saveConfig('config3Text')">Save</button>
+        <button onclick="refreshConfig('config3Text')">Refresh</button>
+        <button onclick="resetConfig('config3Text')">Reset</button>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            let tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.style.display = 'none';
+            });
+            document.getElementById(tabId).style.display = 'block';
+            let tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        function saveConfig(configId) {
+            let configValue = document.getElementById(configId).value;
+            console.log('Saving:', configValue);
+            // Here you would normally make an API call to save the config
+        }
+
+        function refreshConfig(configId) {
+            let configTextArea = document.getElementById(configId);
+            configTextArea.value = '// Refreshed content for ' + configId;
+        }
+
+        function resetConfig(configId) {
+            let configTextArea = document.getElementById(configId);
+            configTextArea.value = '// Reset to default content';
+        }
+    </script>
+</body>
+</html>
